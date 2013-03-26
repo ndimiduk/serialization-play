@@ -113,6 +113,8 @@ public class INT extends HSerializer<Integer> {
    * @param raw 4 unsigned bytes.
    */
   protected static void putRaw(ByteBuffer buff, int raw) {
+    assert buff.limit() >= buff.position() + SIZEOF_INT;
+
     putRaw(buff.array(), buff.arrayOffset() + buff.position(), raw);
     buff.position(buff.position() + SIZEOF_INT);
   }

@@ -113,6 +113,8 @@ public class LONG extends HSerializer<Long> {
    * @param raw 8 unsigned bytes.
    */
   protected static void putRaw(ByteBuffer buff, long raw) {
+    assert buff.limit() >= buff.position() + SIZEOF_LONG;
+
     putRaw(buff.array(), buff.arrayOffset() + buff.position(), raw);
     buff.position(buff.position() + SIZEOF_LONG);
   }

@@ -6,10 +6,17 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 public abstract class HSerializer<T> {
 
+  /**
+   * The order in which a HSerializer implementation will sort, according to
+   * the natural order of the underlying type.
+   */
   public enum Order {
     ASCENDING  ((byte)0x00),
     DESCENDING ((byte)0xff);
 
+    /**
+     * The bit-mask used to invert a value according to this order.
+     */
     public final byte mask;
 
     Order(byte mask) { this.mask = mask; }
@@ -36,6 +43,9 @@ public abstract class HSerializer<T> {
     return new String(buf);
   }
 
+  /**
+   * Convert a byte[] into a String.
+   */
   public static String toBinaryString(byte[] bs) {
     StringBuilder sb = new StringBuilder();
     for (byte b : bs)
