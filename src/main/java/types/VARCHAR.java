@@ -38,7 +38,7 @@ public class VARCHAR extends HSerializer<String> {
 
   @Override
   public String fromBytes(byte[] bytes) {
-    return toString(bytes);
+    return toString(bytes, 0, order);
   }
 
   //
@@ -109,16 +109,17 @@ public class VARCHAR extends HSerializer<String> {
   }
 
   public static String toString(byte[] bytes, int offset, Order order) {
-    if (bytes[offset] == (byte) (NULL ^ order.mask) && bytes[offset+1] == TERM)
+    if (bytes[offset] == TERM) return "";
+    if ((bytes[offset] ^ order.mask) == NULL && bytes[offset + 1] == TERM)
       return null;
 
-    ByteBuffer decoded = ByteBuffer.allocate(bytes.length - offset);
+    ByteBuffer decoded = ByteBuffer.allocate(bytes.length - offset - 1);
     for (int i = offset; i < bytes.length; i++) {
       if (TERM == bytes[i])
         break;
-      decoded.put((byte)(bytes[i] ^ order.mask - 2));
+      decoded.put((byte) ((bytes[i] ^ order.mask) - 2));
     }
-    byte[] ret = new byte[decoded.position() + 1];
+    byte[] ret = new byte[decoded.position()];
     System.arraycopy(decoded.array(), 0, ret, 0, ret.length);
     return new String(ret, UTF8);
   }
