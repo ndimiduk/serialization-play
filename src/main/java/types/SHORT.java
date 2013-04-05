@@ -9,6 +9,9 @@ public class SHORT extends HSerializer<Short> {
 
   static final int SIZEOF_SHORT = Short.SIZE / Byte.SIZE;
 
+  public SHORT() { super(); }
+  public SHORT(Order order) { super(order); }
+
   @Override
   public byte[] toBytes(Short val) {
     return toBytes(val, order);

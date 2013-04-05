@@ -20,6 +20,9 @@ public class LONG extends HSerializer<Long> {
 
   static final int SIZEOF_LONG = Long.SIZE / Byte.SIZE;
 
+  public LONG() { super(); }
+  public LONG(Order order) { super(order); }
+
   @Override
   public byte[] toBytes(Long val) {
     return toBytes(val, order);
@@ -32,7 +35,7 @@ public class LONG extends HSerializer<Long> {
 
   @Override
   public Long fromBytes(byte[] bytes) {
-    // TODO(perf): should we manage our own Long instance cache?
+    // TODO: should we manage our own instance cache?
     return Long.valueOf(toLong(bytes, 0, order));
   }
 

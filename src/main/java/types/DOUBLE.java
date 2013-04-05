@@ -25,6 +25,9 @@ public class DOUBLE extends HSerializer<Double> {
 
   static final int SIZEOF_DOUBLE = LONG.SIZEOF_LONG;
 
+  public DOUBLE() { super(); }
+  public DOUBLE(Order order) { super(order); }
+
   @Override
   public byte[] toBytes(Double val) {
     return toBytes(val, order);

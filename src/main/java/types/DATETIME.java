@@ -16,6 +16,9 @@ public class DATETIME extends HSerializer<Date> {
 
   static final int SIZEOF_DATETIME = LONG.SIZEOF_LONG;
 
+  public DATETIME() { super(); }
+  public DATETIME(Order order) { super(order); }
+
   @Override
   public byte[] toBytes(Date val) {
     return toBytes(val.getTime(), order);

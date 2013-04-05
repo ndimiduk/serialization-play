@@ -20,6 +20,9 @@ public class INT extends HSerializer<Integer> {
 
   static final int SIZEOF_INT = Integer.SIZE / Byte.SIZE;
 
+  public INT() { super(); }
+  public INT(Order order) { super(order); }
+
   @Override
   public byte[] toBytes(Integer val) {
     return toBytes(val, order);
@@ -32,7 +35,7 @@ public class INT extends HSerializer<Integer> {
 
   @Override
   public Integer fromBytes(byte[] bytes) {
-    // TODO(perf): should we manage our own Integer instance cache?
+    // TODO: should we manage our own instance cache?
     return Integer.valueOf(toInt(bytes, 0, order));
   }
 

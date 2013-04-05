@@ -56,8 +56,8 @@ public abstract class HSerializer<T> {
   public static final Order DEFAULT_ORDER = Order.ASCENDING;
   protected Order order = DEFAULT_ORDER;
 
-  public HSerializer() {}
-  public HSerializer(Order order) { this.order = order; }
+  protected HSerializer() {}
+  protected HSerializer(Order order) { this.order = order; }
 
   public abstract byte[] toBytes(T val);
   public abstract void putBytes(ByteBuffer buff, T val);

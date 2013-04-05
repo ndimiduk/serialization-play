@@ -8,6 +8,9 @@ import util.HSerializer;
 
 public class DECIMAL extends HSerializer<BigInteger> {
 
+  public DECIMAL() { super(); }
+  public DECIMAL(Order order) { super(order); }
+
   @Override
   public byte[] toBytes(BigInteger val) {
     // TODO Auto-generated method stub

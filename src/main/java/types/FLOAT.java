@@ -25,6 +25,9 @@ public class FLOAT extends HSerializer<Float> {
 
   static final int SIZEOF_FLOAT = INT.SIZEOF_INT;
 
+  public FLOAT() { super(); }
+  public FLOAT(Order order) { super(order); }
+
   @Override
   public byte[] toBytes(Float val) {
     return toBytes(val, order);
