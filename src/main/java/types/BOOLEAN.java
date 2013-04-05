@@ -20,21 +20,39 @@ public class BOOLEAN extends HSerializer<Boolean> {
 
   static final int SIZEOF_BOOLEAN = Byte.SIZE / Byte.SIZE;
   static final byte TRUE  = (byte) 0xFF;
-  static final byte FALSE = (byte) 0x00;
+  static final byte FALSE = (byte) 0x01;
+  static final byte NULL  = (byte) 0x00;
+
+  public BOOLEAN() { super(); }
+  public BOOLEAN(Order order) { super(order); }
 
   @Override
   public byte[] toBytes(Boolean val) {
+    if (null == val) return new byte[] { (byte) (NULL ^ order.mask) };
     return toBytes(val, order);
   }
 
   @Override
   public void putBytes(ByteBuffer buff, Boolean val) {
-    putBytes(buff, val, order);
+    if (null == val)
+      buff.put(new byte[] { (byte) (NULL ^ order.mask) });
+    else
+      putBytes(buff, val, order);
   }
 
   @Override
   public Boolean fromBytes(byte[] bytes) {
-    return Boolean.valueOf(toBoolean(bytes, order));
+    assert bytes.length == 1;
+    switch (bytes[0] ^ order.mask) {
+    case NULL:
+      return null;
+    case FALSE:
+      return Boolean.FALSE;
+    case TRUE:
+      return Boolean.TRUE;
+    default:
+      throw new IllegalArgumentException("Unexpected byte value " + toBinaryString(bytes));
+    }
   }
 
   //
@@ -46,9 +64,17 @@ public class BOOLEAN extends HSerializer<Boolean> {
   }
 
   public static boolean toBoolean(byte[] bytes, Order order) {
-    assert bytes.length == 0;
-
-    return (bytes[0] ^ order.mask) != 0;
+    assert bytes.length == 1;
+    switch (bytes[0] ^ order.mask) {
+    case NULL:
+      throw new IllegalArgumentException("primitive interface does not support NULL values.");
+    case FALSE:
+      return false;
+    case TRUE:
+      return true;
+    default:
+      throw new IllegalArgumentException("Unexpected byte value " + toBinaryString(bytes));
+    }
   }
 
   public static byte[] toBytes(final boolean val) {
