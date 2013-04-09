@@ -5,15 +5,36 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static types.LONG.toBytes;
 import static types.LONG.toLong;
-import static util.HSerializer.compareTo;
+import static util.HSerializer.compare;
 import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
+import java.util.Random;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
-public class TestLONG {
+import types.LONG;
 
+public class TestLONG extends TestHSerializable<Long> {
+
+  protected static final Log LOG = LogFactory.getLog(TestLONG.class);
   private static final byte ONES = (byte) 0xFF;
+  private static final Random r;
+
+  static {
+    String seed = System.getProperty("test.random.seed", "" + System.currentTimeMillis());
+    LOG.info("Using random seed: " + seed);
+    r = new Random(Long.valueOf(seed));
+  }
+
+  protected Long create() {
+    return r.nextLong();
+  }
+
+  protected LONG ascendingSerializer() { return new LONG(ASCENDING); }
+  protected LONG descendingSerializer() { return new LONG(DESCENDING); }
 
   @Test
   public void testSerialize() {
@@ -25,10 +46,10 @@ public class TestLONG {
       toBytes(-1));
     assertEquals(
       signum(new Long(1L).compareTo(0L)),
-      signum(compareTo(toBytes(1L, ASCENDING), toBytes(0L, ASCENDING))));
+      signum(compare(toBytes(1L, ASCENDING), toBytes(0L, ASCENDING))));
     assertEquals(
       signum(new Long(1L).compareTo(0L)),
-      signum(-compareTo(toBytes(1L, DESCENDING), toBytes(0L, DESCENDING))));
+      signum(-compare(toBytes(1L, DESCENDING), toBytes(0L, DESCENDING))));
   }
 
   @Test

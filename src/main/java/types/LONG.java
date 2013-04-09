@@ -90,7 +90,7 @@ public class LONG extends HSerializer<Long> {
    * @return 8 unsigned bytes stored in a <code>long</code>.
    */
   protected static long toRawLong(long val, Order order) {
-    return val ^ Long.MIN_VALUE ^ order.mask;
+    return val ^ Long.MIN_VALUE ^ order.mask();
   }
 
   /**
@@ -101,7 +101,7 @@ public class LONG extends HSerializer<Long> {
    * @return an application value.
    */
   protected static long fromRawLong(long raw, Order order) {
-    return raw ^ Long.MIN_VALUE ^ order.mask;
+    return raw ^ Long.MIN_VALUE ^ order.mask();
   }
 
   //

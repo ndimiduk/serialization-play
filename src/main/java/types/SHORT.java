@@ -79,7 +79,7 @@ public class SHORT extends HSerializer<Short> {
    * @return 2 unsigned bytes stored in a <code>short</code>.
    */
   protected static short toRawShort(short val, Order order) {
-    return (short) (((int) val) ^ Integer.MIN_VALUE ^ order.mask);
+    return (short) (((int) val) ^ Integer.MIN_VALUE ^ order.mask());
   }
 
   /**
@@ -90,7 +90,7 @@ public class SHORT extends HSerializer<Short> {
    * @return an application value.
    */
   protected static short fromRawShort(short raw, Order order) {
-    return (short) (((int) raw) ^ Integer.MIN_VALUE ^ order.mask);
+    return (short) (((int) raw) ^ Integer.MIN_VALUE ^ order.mask());
   }
 
   //

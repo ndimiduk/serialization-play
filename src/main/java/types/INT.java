@@ -90,7 +90,7 @@ public class INT extends HSerializer<Integer> {
    * @return 4 unsigned bytes stored in an <code>int</code>.
    */
   protected static int toRawInt(int val, Order order) {
-    return val ^ Integer.MIN_VALUE ^ order.mask;
+    return val ^ Integer.MIN_VALUE ^ order.mask();
   }
 
   /**
@@ -101,7 +101,7 @@ public class INT extends HSerializer<Integer> {
    * @return an application value.
    */
   protected static int fromRawInt(int raw, Order order) {
-    return raw ^ Integer.MIN_VALUE ^ order.mask;
+    return raw ^ Integer.MIN_VALUE ^ order.mask();
   }
 
   //

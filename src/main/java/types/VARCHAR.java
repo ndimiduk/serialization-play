@@ -33,7 +33,7 @@ public class VARCHAR extends HSerializer<String> {
 
   @Override
   public void putBytes(ByteBuffer buff, String val) {
-    putBytes(buff.array(), buff.position(), val, order);
+    putBytes(buff, val, order);
   }
 
   @Override
@@ -49,13 +49,13 @@ public class VARCHAR extends HSerializer<String> {
 
   public static byte[] toBytes(String val, Order order) {
     if (null == val) {
-      return new byte[] { (byte) (NULL ^ order.mask), TERM };
+      return new byte[] { (byte) (NULL ^ order.mask()), TERM };
     }
 
     // TODO: reimplement with fewer allocations/copies
     byte[] encoded = val.getBytes(UTF8);
     for (int i = 0; i < encoded.length; i++) {
-      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask);
+      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask());
     }
     byte[] ret = new byte[encoded.length + 1];
     ret[encoded.length] = TERM;
@@ -66,7 +66,7 @@ public class VARCHAR extends HSerializer<String> {
   public static byte[] putBytes(byte[] dst, int dstOffset, String val, Order order) {
     if (null == val) {
       assert dst.length >= dstOffset + 2;
-      dst[dstOffset] = (byte) (NULL ^ order.mask);
+      dst[dstOffset] = (byte) (NULL ^ order.mask());
       dst[dstOffset + 1] = TERM;
       return dst;
     }
@@ -74,7 +74,7 @@ public class VARCHAR extends HSerializer<String> {
     // TODO: reimplement with fewer allocations/copies
     byte[] encoded = val.getBytes(UTF8);
     for (int i = 0; i < encoded.length; i++) {
-      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask);
+      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask());
     }
     assert dst.length >= dstOffset + encoded.length + 1;
     dst[dstOffset + encoded.length] = TERM;
@@ -85,14 +85,14 @@ public class VARCHAR extends HSerializer<String> {
   public static ByteBuffer putBytes(ByteBuffer buff, String val, Order order) {
     if (null == val) {
       assert buff.limit() >= buff.position() + 2;
-      buff.put((byte) (NULL ^ order.mask));
+      buff.put((byte) (NULL ^ order.mask()));
       return buff.put(TERM);
     }
 
     // TODO: reimplement with fewer allocations/copies
     byte[] encoded = val.getBytes(UTF8);
     for (int i = 0; i < encoded.length; i++) {
-      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask);
+      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask());
     }
     assert buff.limit() >= buff.position() + encoded.length + 1;
     System.arraycopy(encoded, 0, buff.array(), buff.position(), encoded.length);
@@ -110,14 +110,14 @@ public class VARCHAR extends HSerializer<String> {
 
   public static String toString(byte[] bytes, int offset, Order order) {
     if (bytes[offset] == TERM) return "";
-    if ((bytes[offset] ^ order.mask) == NULL && bytes[offset + 1] == TERM)
+    if ((bytes[offset] ^ order.mask()) == NULL && bytes[offset + 1] == TERM)
       return null;
 
     ByteBuffer decoded = ByteBuffer.allocate(bytes.length - offset - 1);
     for (int i = offset; i < bytes.length; i++) {
       if (TERM == bytes[i])
         break;
-      decoded.put((byte) ((bytes[i] ^ order.mask) - 2));
+      decoded.put((byte) ((bytes[i] ^ order.mask()) - 2));
     }
     byte[] ret = new byte[decoded.position()];
     System.arraycopy(decoded.array(), 0, ret, 0, ret.length);

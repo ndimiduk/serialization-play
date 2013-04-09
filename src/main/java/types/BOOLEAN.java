@@ -28,14 +28,14 @@ public class BOOLEAN extends HSerializer<Boolean> {
 
   @Override
   public byte[] toBytes(Boolean val) {
-    if (null == val) return new byte[] { (byte) (NULL ^ order.mask) };
+    if (null == val) return new byte[] { (byte) (NULL ^ order.mask()) };
     return toBytes(val, order);
   }
 
   @Override
   public void putBytes(ByteBuffer buff, Boolean val) {
     if (null == val)
-      buff.put(new byte[] { (byte) (NULL ^ order.mask) });
+      buff.put(new byte[] { (byte) (NULL ^ order.mask()) });
     else
       putBytes(buff, val, order);
   }
@@ -43,7 +43,7 @@ public class BOOLEAN extends HSerializer<Boolean> {
   @Override
   public Boolean fromBytes(byte[] bytes) {
     assert bytes.length == 1;
-    switch (bytes[0] ^ order.mask) {
+    switch (bytes[0] ^ order.mask()) {
     case NULL:
       return null;
     case FALSE:
@@ -65,7 +65,7 @@ public class BOOLEAN extends HSerializer<Boolean> {
 
   public static boolean toBoolean(byte[] bytes, Order order) {
     assert bytes.length == 1;
-    switch (bytes[0] ^ order.mask) {
+    switch (bytes[0] ^ order.mask()) {
     case NULL:
       throw new IllegalArgumentException("primitive interface does not support NULL values.");
     case FALSE:
@@ -82,7 +82,7 @@ public class BOOLEAN extends HSerializer<Boolean> {
   }
 
   public static byte[] toBytes(final boolean val, final Order order) {
-    return new byte[] { (byte) ((val ? TRUE : FALSE) ^ order.mask) };
+    return new byte[] { (byte) ((val ? TRUE : FALSE) ^ order.mask()) };
   }
 
   public static void putBytes(final ByteBuffer buff, final boolean val) {
@@ -91,7 +91,7 @@ public class BOOLEAN extends HSerializer<Boolean> {
 
   public static void putBytes(final ByteBuffer buff, final boolean val, final Order order) {
     Bytes.putByte(buff.array(), buff.arrayOffset() + buff.position(),
-      (byte) ((val ? TRUE : FALSE) ^ order.mask));
+      (byte) ((val ? TRUE : FALSE) ^ order.mask()));
     buff.position(buff.position() + SIZEOF_BOOLEAN);
   }
 }

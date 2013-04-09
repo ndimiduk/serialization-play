@@ -14,21 +14,42 @@ public abstract class HSerializer<T> {
     ASCENDING  ((byte)0x00),
     DESCENDING ((byte)0xff);
 
+    private final byte mask;
+
     /**
      * The bit-mask used to invert a value according to this order.
      */
-    public final byte mask;
+    public byte mask() { return mask; }
 
     Order(byte mask) { this.mask = mask; }
   }
 
-  public static int compareTo(byte[] left, byte[] right) {
+  public static int compare(byte[] left, byte[] right) {
     return Bytes.compareTo(left, right);
   }
 
-  public static int compareTo(byte[] left, int loffset, int llen, byte[] right,
+  public static int compare(byte[] left, int loffset, int llen, byte[] right,
       int roffset, int rlen) {
     return Bytes.compareTo(left, loffset, llen, right, roffset, rlen);
+  }
+
+  /**
+   * Extend a {@link Comparable} to support nulls on either side.
+   */
+  public static <T extends Comparable<T>> int compare(HSerializer<T> serde, T t1, T t2) {
+    return compare(serde.order, t1, t2);
+  }
+
+  /**
+   * Extend a {@link Comparable} to support nulls on either side.
+   */
+  public static <T extends Comparable<T>> int compare(Order o, T t1, T t2) {
+    if (t1 == null) {
+      if (t2 == null) return 0;
+      else return -1 * (o == Order.ASCENDING ? 1 : -1);
+    }
+    if (t2 == null) return 1 * (o == Order.ASCENDING ? 1 : -1);
+    return t1.compareTo(t2) * (o == Order.ASCENDING ? 1 : -1);
   }
 
   /**
@@ -58,6 +79,16 @@ public abstract class HSerializer<T> {
 
   protected HSerializer() {}
   protected HSerializer(Order order) { this.order = order; }
+
+  /**
+   * Get the sort <code>Order</code> specified by this HSerializer.
+   */
+  public Order order() { return order; }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "(" + order + ")";
+  }
 
   public abstract byte[] toBytes(T val);
   public abstract void putBytes(ByteBuffer buff, T val);
