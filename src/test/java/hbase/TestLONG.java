@@ -9,25 +9,13 @@ import static util.HSerializer.compare;
 import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
-import java.util.Random;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 import types.LONG;
 
-public class TestLONG extends TestHSerializable<Long> {
+public class TestLONG extends RandomTestHSerializable<Long> {
 
-  protected static final Log LOG = LogFactory.getLog(TestLONG.class);
   private static final byte ONES = (byte) 0xFF;
-  private static final Random r;
-
-  static {
-    String seed = System.getProperty("test.random.seed", "" + System.currentTimeMillis());
-    LOG.info("Using random seed: " + seed);
-    r = new Random(Long.valueOf(seed));
-  }
 
   protected Long create() {
     return r.nextLong();

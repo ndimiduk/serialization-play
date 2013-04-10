@@ -8,27 +8,14 @@ import static util.HSerializer.compare;
 import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
-import java.util.Random;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 import types.VARCHAR;
 
-public class TestVARCHAR extends TestHSerializable<String> {
-
-  protected static final Log LOG = LogFactory.getLog(TestVARCHAR.class);
-  private static final Random r;
-
-  static {
-    String seed = System.getProperty("test.random.seed", "" + System.currentTimeMillis());
-    LOG.info("Using random seed: " + seed);
-    r = new Random(Long.valueOf(seed));
-  }
+public class TestVARCHAR extends RandomTestHSerializable<String> {
 
   protected String create() {
-    int len = r.nextInt(4); // 1024
+    int len = r.nextInt(1024);
     StringBuilder sb = new StringBuilder(len);
 
     for (int i = 0; i < len; i++)
