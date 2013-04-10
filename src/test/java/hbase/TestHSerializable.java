@@ -37,18 +37,14 @@ public abstract class TestHSerializable<T extends Comparable<T>> {
   }
 
   protected void testSort(T val1, T val2, HSerializer<T> serde) {
-    int direction = serde.order() == ASCENDING ? 1 : -1;
     byte[] bytes1 = serde.toBytes(val1);
     byte[] bytes2 = serde.toBytes(val2);
+    int expectedOrder = signum(compare(serde, val1, val2));
+    int byteOrder = signum(compare(bytes1, bytes2));
 
     assertEquals(
       String.format("%s sort order broken for <%s>, <%s>", serde.order(), val1, val2),
-      signum(compare(serde, val1, val2)),
-      signum(direction * compare(bytes1, bytes2)));
-    assertEquals(
-      String.format("%s sort order broken for <%s>, <%s>", serde.order(), val2, val1),
-      signum(compare(serde, val2, val1)),
-      signum(direction * compare(bytes2, bytes1)));
+      expectedOrder, byteOrder);
   }
 
   @Test
