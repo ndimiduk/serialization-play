@@ -26,6 +26,13 @@ public class VARCHAR extends HSerializer<String> {
   public VARCHAR() { super(); }
   public VARCHAR(Order order) { super(order); }
 
+  /**
+   * Return byte resulting from application of sort-order mask to <code>b</code>.
+   */
+  protected static byte mask(Order o, byte b) {
+    return (byte) (b ^ o.mask());
+  }
+
   @Override
   public byte[] toBytes(String val) {
     return toBytes(val, order);
@@ -49,16 +56,16 @@ public class VARCHAR extends HSerializer<String> {
 
   public static byte[] toBytes(String val, Order order) {
     if (null == val) {
-      return new byte[] { (byte) (NULL ^ order.mask()), TERM };
+      return new byte[] { mask(order, NULL), mask(order, TERM) };
     }
 
     // TODO: reimplement with fewer allocations/copies
     byte[] encoded = val.getBytes(UTF8);
     for (int i = 0; i < encoded.length; i++) {
-      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask());
+      encoded[i] = mask(order, (byte) (encoded[i] + 2));
     }
     byte[] ret = new byte[encoded.length + 1];
-    ret[encoded.length] = TERM;
+    ret[encoded.length] = mask(order, TERM);
     System.arraycopy(encoded, 0, ret, 0, encoded.length);
     return ret;
   }
@@ -66,18 +73,18 @@ public class VARCHAR extends HSerializer<String> {
   public static byte[] putBytes(byte[] dst, int dstOffset, String val, Order order) {
     if (null == val) {
       assert dst.length >= dstOffset + 2;
-      dst[dstOffset] = (byte) (NULL ^ order.mask());
-      dst[dstOffset + 1] = TERM;
+      dst[dstOffset] = mask(order, NULL);
+      dst[dstOffset + 1] = mask(order, TERM);
       return dst;
     }
 
     // TODO: reimplement with fewer allocations/copies
     byte[] encoded = val.getBytes(UTF8);
     for (int i = 0; i < encoded.length; i++) {
-      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask());
+      encoded[i] = mask(order, (byte) (encoded[i] + 2));
     }
     assert dst.length >= dstOffset + encoded.length + 1;
-    dst[dstOffset + encoded.length] = TERM;
+    dst[dstOffset + encoded.length] = mask(order, TERM);
     System.arraycopy(encoded, 0, dst, dstOffset, encoded.length);
     return dst;
   }
@@ -85,19 +92,19 @@ public class VARCHAR extends HSerializer<String> {
   public static ByteBuffer putBytes(ByteBuffer buff, String val, Order order) {
     if (null == val) {
       assert buff.limit() >= buff.position() + 2;
-      buff.put((byte) (NULL ^ order.mask()));
-      return buff.put(TERM);
+      buff.put(mask(order, NULL));
+      return buff.put(mask(order, TERM));
     }
 
     // TODO: reimplement with fewer allocations/copies
     byte[] encoded = val.getBytes(UTF8);
     for (int i = 0; i < encoded.length; i++) {
-      encoded[i] = (byte) (encoded[i] + 2 ^ order.mask());
+      encoded[i] = mask(order, (byte) (encoded[i] + 2));
     }
     assert buff.limit() >= buff.position() + encoded.length + 1;
     System.arraycopy(encoded, 0, buff.array(), buff.position(), encoded.length);
     buff.position(buff.position() + encoded.length);
-    return buff.put(TERM);
+    return buff.put(mask(order, TERM));
   }
 
   public static String toString(byte[] bytes) {
@@ -109,15 +116,15 @@ public class VARCHAR extends HSerializer<String> {
   }
 
   public static String toString(byte[] bytes, int offset, Order order) {
-    if (bytes[offset] == TERM) return "";
-    if ((bytes[offset] ^ order.mask()) == NULL && bytes[offset + 1] == TERM)
+    if (mask(order, bytes[offset]) == TERM) return "";
+    if (mask(order, bytes[offset]) == NULL && mask(order, bytes[offset + 1]) == TERM)
       return null;
 
     ByteBuffer decoded = ByteBuffer.allocate(bytes.length - offset - 1);
     for (int i = offset; i < bytes.length; i++) {
-      if (TERM == bytes[i])
+      if (TERM == mask(order, bytes[i]))
         break;
-      decoded.put((byte) ((bytes[i] ^ order.mask()) - 2));
+      decoded.put((byte) (mask(order, bytes[i]) - 2));
     }
     byte[] ret = new byte[decoded.position()];
     System.arraycopy(decoded.array(), 0, ret, 0, ret.length);

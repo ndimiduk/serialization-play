@@ -21,6 +21,14 @@ public abstract class HSerializer<T> {
      */
     public byte mask() { return mask; }
 
+    /**
+     * Returns the adjusted trichotomous value according to the ordering
+     * imposed by this <code>Order</code>.
+     */
+    public int cmp(int cmp) {
+      return cmp * (this == ASCENDING ? 1 : -1);
+    }
+
     Order(byte mask) { this.mask = mask; }
   }
 
@@ -46,10 +54,10 @@ public abstract class HSerializer<T> {
   public static <T extends Comparable<T>> int compare(Order o, T t1, T t2) {
     if (t1 == null) {
       if (t2 == null) return 0;
-      else return -1 * (o == Order.ASCENDING ? 1 : -1);
+      else return o.cmp(-1);
     }
-    if (t2 == null) return 1 * (o == Order.ASCENDING ? 1 : -1);
-    return t1.compareTo(t2) * (o == Order.ASCENDING ? 1 : -1);
+    if (t2 == null) return o.cmp(1);
+    return o.cmp(t1.compareTo(t2));
   }
 
   /**
