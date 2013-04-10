@@ -29,6 +29,9 @@ public class DOUBLE extends HSerializer<Double> {
   public DOUBLE(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() { return false; }
+
+  @Override
   public byte[] toBytes(Double val) {
     return toBytes(val, order);
   }

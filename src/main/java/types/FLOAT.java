@@ -29,6 +29,9 @@ public class FLOAT extends HSerializer<Float> {
   public FLOAT(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() { return false; }
+
+  @Override
   public byte[] toBytes(Float val) {
     return toBytes(val, order);
   }

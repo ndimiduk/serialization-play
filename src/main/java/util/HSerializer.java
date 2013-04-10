@@ -98,6 +98,7 @@ public abstract class HSerializer<T> {
     return this.getClass().getSimpleName() + "(" + order + ")";
   }
 
+  public abstract boolean supportsNull();
   public abstract byte[] toBytes(T val);
   public abstract T fromBytes(byte[] bytes);
   public abstract void write(ByteBuffer buff, T val);

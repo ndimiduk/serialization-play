@@ -10,6 +10,12 @@ public class BYTE extends HSerializer<byte[]> {
   public BYTE(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() {
+    // TODO
+    throw new RuntimeException("Not yet implemented.");
+  }
+
+  @Override
   public byte[] toBytes(byte[] val) {
     // TODO
     throw new RuntimeException("Not yet implemented.");

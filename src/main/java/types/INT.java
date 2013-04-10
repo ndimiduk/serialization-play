@@ -24,6 +24,9 @@ public class INT extends HSerializer<Integer> {
   public INT(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() { return false; }
+
+  @Override
   public byte[] toBytes(Integer val) {
     return toBytes(val, order);
   }

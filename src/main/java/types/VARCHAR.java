@@ -34,6 +34,9 @@ public class VARCHAR extends HSerializer<String> {
   }
 
   @Override
+  public boolean supportsNull() { return true; }
+
+  @Override
   public byte[] toBytes(String val) {
     return toBytes(val, order);
   }

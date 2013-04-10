@@ -12,6 +12,12 @@ public class VARINT extends HSerializer<BigInteger> {
   public VARINT(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() {
+    // TODO
+    throw new RuntimeException("Not yet implemented.");
+  }
+
+  @Override
   public byte[] toBytes(BigInteger val) {
     // TODO
     throw new RuntimeException("Not yet implemented.");

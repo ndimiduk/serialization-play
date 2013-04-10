@@ -20,6 +20,9 @@ public class DATETIME extends HSerializer<Date> {
   public DATETIME(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() { return new LONG().supportsNull(); }
+
+  @Override
   public byte[] toBytes(Date val) {
     return toBytes(val.getTime(), order);
   }

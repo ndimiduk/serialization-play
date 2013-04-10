@@ -27,6 +27,9 @@ public class BOOLEAN extends HSerializer<Boolean> {
   public BOOLEAN(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() { return true; }
+
+  @Override
   public byte[] toBytes(Boolean val) {
     if (null == val) return new byte[] { (byte) (NULL ^ order.mask()) };
     return toBytes(val, order);

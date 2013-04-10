@@ -13,6 +13,9 @@ public class SHORT extends HSerializer<Short> {
   public SHORT(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() { return false; }
+
+  @Override
   public byte[] toBytes(Short val) {
     return toBytes(val, order);
   }

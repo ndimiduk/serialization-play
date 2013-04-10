@@ -24,6 +24,9 @@ public class LONG extends HSerializer<Long> {
   public LONG(Order order) { super(order); }
 
   @Override
+  public boolean supportsNull() { return false; }
+
+  @Override
   public byte[] toBytes(Long val) {
     return toBytes(val, order);
   }

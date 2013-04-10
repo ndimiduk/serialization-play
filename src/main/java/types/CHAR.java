@@ -60,6 +60,9 @@ public class CHAR extends HSerializer<String> {
   }
 
   @Override
+  public boolean supportsNull() { return new VARCHAR().supportsNull(); }
+
+  @Override
   public byte[] toBytes(String val) {
     return validate(length, VARCHAR.toBytes(validate(length, val), order), 0);
   }
