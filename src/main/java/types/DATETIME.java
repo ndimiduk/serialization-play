@@ -25,13 +25,18 @@ public class DATETIME extends HSerializer<Date> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, Date val) {
+  public void write(ByteBuffer buff, Date val) {
     putBytes(buff, val.getTime(), order);
   }
 
   @Override
   public Date fromBytes(byte[] bytes) {
     return new Date(LONG.toLong(bytes, 0, order));
+  }
+
+  @Override
+  public Date read(ByteBuffer buff) {
+    return new Date(LONG.toLong(buff, order));
   }
 
   //

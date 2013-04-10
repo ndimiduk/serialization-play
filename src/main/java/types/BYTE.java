@@ -16,13 +16,19 @@ public class BYTE extends HSerializer<byte[]> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, byte[] val) {
+  public void write(ByteBuffer buff, byte[] val) {
     // TODO
     throw new RuntimeException("Not yet implemented.");
   }
 
   @Override
   public byte[] fromBytes(byte[] bytes) {
+    // TODO
+    throw new RuntimeException("Not yet implemented.");
+  }
+
+  @Override
+  public byte[] read(ByteBuffer buff) {
     // TODO
     throw new RuntimeException("Not yet implemented.");
   }

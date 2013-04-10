@@ -33,7 +33,7 @@ public class BOOLEAN extends HSerializer<Boolean> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, Boolean val) {
+  public void write(ByteBuffer buff, Boolean val) {
     if (null == val)
       buff.put(new byte[] { (byte) (NULL ^ order.mask()) });
     else
@@ -52,6 +52,21 @@ public class BOOLEAN extends HSerializer<Boolean> {
       return Boolean.TRUE;
     default:
       throw new IllegalArgumentException("Unexpected byte value " + toBinaryString(bytes));
+    }
+  }
+
+  @Override
+  public Boolean read(ByteBuffer buff) {
+    byte b = buff.get();
+    switch (b ^ order.mask()) {
+    case NULL:
+      return null;
+    case FALSE:
+      return Boolean.FALSE;
+    case TRUE:
+      return Boolean.TRUE;
+    default:
+      throw new IllegalArgumentException("Unexpected byte value " + toBinaryString(b));
     }
   }
 

@@ -65,12 +65,18 @@ public class CHAR extends HSerializer<String> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, String val) {
+  public void write(ByteBuffer buff, String val) {
+    buff.put(toBytes(val));
   }
 
   @Override
   public String fromBytes(byte[] bytes) {
     return VARCHAR.toString(validate(length, bytes, 0), 0, order);
+  }
+
+  @Override
+  public String read(ByteBuffer buff) {
+    return validate(length, VARCHAR.toString(buff));
   }
 
   //

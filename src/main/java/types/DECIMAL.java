@@ -18,13 +18,19 @@ public class DECIMAL extends HSerializer<BigDecimal> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, BigDecimal val) {
+  public void write(ByteBuffer buff, BigDecimal val) {
     // TODO
     throw new RuntimeException("Not yet implemented.");
   }
 
   @Override
   public BigDecimal fromBytes(byte[] bytes) {
+    // TODO
+    throw new RuntimeException("Not yet implemented.");
+  }
+
+  @Override
+  public BigDecimal read(ByteBuffer buff) {
     // TODO
     throw new RuntimeException("Not yet implemented.");
   }

@@ -18,7 +18,7 @@ public class SHORT extends HSerializer<Short> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, Short val) {
+  public void write(ByteBuffer buff, Short val) {
     putBytes(buff, val, order);
   }
 
@@ -26,6 +26,12 @@ public class SHORT extends HSerializer<Short> {
   public Short fromBytes(byte[] bytes) {
     // TODO: should we manage our own instance cache?
     return Short.valueOf(toShort(bytes, 0, order));
+  }
+
+  @Override
+  public Short read(ByteBuffer buff) {
+    // TODO: should we manage our own instance cache?
+    return Short.valueOf(toShort(buff, order));
   }
 
   //
@@ -46,6 +52,14 @@ public class SHORT extends HSerializer<Short> {
 
   public static short toShort(final byte[] bytes, final int offset, Order order) {
     return fromRawShort(getRaw(bytes, offset), order);
+  }
+
+  public static short toShort(ByteBuffer buff) {
+    return toShort(buff, DEFAULT_ORDER);
+  }
+
+  public static short toShort(ByteBuffer buff, Order order) {
+    return fromRawShort(getRaw(buff), order);
   }
 
   public static byte[] toBytes(short val) {

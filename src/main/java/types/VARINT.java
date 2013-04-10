@@ -18,13 +18,19 @@ public class VARINT extends HSerializer<BigInteger> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, BigInteger val) {
+  public void write(ByteBuffer buff, BigInteger val) {
     // TODO
     throw new RuntimeException("Not yet implemented.");
   }
 
   @Override
   public BigInteger fromBytes(byte[] bytes) {
+    // TODO
+    throw new RuntimeException("Not yet implemented.");
+  }
+
+  @Override
+  public BigInteger read(ByteBuffer buff) {
     // TODO
     throw new RuntimeException("Not yet implemented.");
   }

@@ -29,7 +29,7 @@ public class LONG extends HSerializer<Long> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, Long val) {
+  public void write(ByteBuffer buff, Long val) {
     putBytes(buff, val, order);
   }
 
@@ -37,6 +37,12 @@ public class LONG extends HSerializer<Long> {
   public Long fromBytes(byte[] bytes) {
     // TODO: should we manage our own instance cache?
     return Long.valueOf(toLong(bytes, 0, order));
+  }
+
+  @Override
+  public Long read(ByteBuffer buff) {
+    // TODO: should we manage our own instance cache?
+    return Long.valueOf(toLong(buff, order));
   }
 
   //
@@ -57,6 +63,14 @@ public class LONG extends HSerializer<Long> {
 
   public static long toLong(final byte[] bytes, final int offset, Order order) {
     return fromRawLong(getRaw(bytes, offset), order);
+  }
+
+  public static long toLong(ByteBuffer buff) {
+    return toLong(buff, DEFAULT_ORDER);
+  }
+
+  public static long toLong(ByteBuffer buff, Order order) {
+    return fromRawLong(getRaw(buff), order);
   }
 
   public static byte[] toBytes(long val) {

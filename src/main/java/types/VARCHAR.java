@@ -39,13 +39,18 @@ public class VARCHAR extends HSerializer<String> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, String val) {
+  public void write(ByteBuffer buff, String val) {
     putBytes(buff, val, order);
   }
 
   @Override
   public String fromBytes(byte[] bytes) {
     return toString(bytes, 0, order);
+  }
+
+  @Override
+  public String read(ByteBuffer buff) {
+    return toString(buff);
   }
 
   //
@@ -129,5 +134,24 @@ public class VARCHAR extends HSerializer<String> {
     byte[] ret = new byte[decoded.position()];
     System.arraycopy(decoded.array(), 0, ret, 0, ret.length);
     return new String(ret, UTF8);
+  }
+
+  public static String toString(ByteBuffer buff) {
+    return toString(buff, DEFAULT_ORDER);
+  }
+
+  public static String toString(ByteBuffer buff, Order order) {
+    // locate the terminal byte
+    int initalPosition = buff.position();
+    while (mask(order, buff.get()) != TERM);
+    if (initalPosition == buff.position() - 1) return "";
+    if (initalPosition == buff.position() - 2 && mask(order, buff.get(initalPosition)) == TERM)
+      return null;
+
+    byte[] decoded = new byte[buff.position() - initalPosition - 1];
+    for (int i = initalPosition; i < buff.position() - 1; i++) {
+      decoded[i - initalPosition] = (byte) (mask(order, buff.get(i)) - 2);
+    }
+    return new String(decoded, UTF8);
   }
 }

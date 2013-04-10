@@ -34,13 +34,18 @@ public class DOUBLE extends HSerializer<Double> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, Double val) {
+  public void write(ByteBuffer buff, Double val) {
     putBytes(buff, val, order);
   }
 
   @Override
   public Double fromBytes(byte[] bytes) {
     return toDouble(bytes, 0, order);
+  }
+
+  @Override
+  public Double read(ByteBuffer buff) {
+    return toDouble(buff, order);
   }
 
   //
@@ -61,6 +66,14 @@ public class DOUBLE extends HSerializer<Double> {
 
   public static double toDouble(final byte[] bytes, final int offset, Order order) {
     return fromRawLong(getRaw(bytes, offset), order);
+  }
+
+  public static double toDouble(ByteBuffer buff) {
+    return toDouble(buff, DEFAULT_ORDER);
+  }
+
+  public static double toDouble(ByteBuffer buff, Order order) {
+    return fromRawLong(getRaw(buff), order);
   }
 
   public static byte[] toBytes(double val) {

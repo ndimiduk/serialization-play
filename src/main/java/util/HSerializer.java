@@ -63,7 +63,7 @@ public abstract class HSerializer<T> {
   /**
    * Convert a byte into a String.
    */
-  private static String toBinaryString(byte b) {
+  public static String toBinaryString(byte b) {
     char[] buf = new char[8];
     byte[] ref = new byte[] { (byte) 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
     for (byte i = 0; i < 8; i++) {
@@ -99,6 +99,7 @@ public abstract class HSerializer<T> {
   }
 
   public abstract byte[] toBytes(T val);
-  public abstract void putBytes(ByteBuffer buff, T val);
   public abstract T fromBytes(byte[] bytes);
+  public abstract void write(ByteBuffer buff, T val);
+  public abstract T read(ByteBuffer buff);
 }

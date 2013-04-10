@@ -8,7 +8,6 @@ import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -21,17 +20,19 @@ public abstract class TestHSerializable<T extends Comparable<T>> {
   protected abstract HSerializer<T> descendingSerializer();
 
   protected void testSerialization(T val, HSerializer<T> serde) {
+
+    // test byte[] serialization
     byte[] bytes = serde.toBytes(val);
     T p = serde.fromBytes(bytes);
     assertEquals(
       "round-trip byte[] serialization should be equal.",
       0, HSerializer.compare(serde, val, p));
-    Arrays.fill(bytes, (byte) 0);
+
+    // test ByteBuffer serialization
     ByteBuffer buf = ByteBuffer.allocate(bytes.length);
-    serde.putBytes(buf, val);
+    serde.write(buf, val);
     buf.flip();
-    buf.get(bytes, 0, bytes.length);
-    p = serde.fromBytes(bytes);
+    p = serde.read(buf);
     assertEquals("round-trip ByteBuffer serialization should be equal",
       0, HSerializer.compare(serde, val, p));
   }

@@ -29,7 +29,7 @@ public class INT extends HSerializer<Integer> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, Integer val) {
+  public void write(ByteBuffer buff, Integer val) {
     putBytes(buff, val, order);
   }
 
@@ -37,6 +37,12 @@ public class INT extends HSerializer<Integer> {
   public Integer fromBytes(byte[] bytes) {
     // TODO: should we manage our own instance cache?
     return Integer.valueOf(toInt(bytes, 0, order));
+  }
+
+  @Override
+  public Integer read(ByteBuffer buff) {
+    // TODO: should we manage our own instance cache?
+    return Integer.valueOf(toInt(buff, order));
   }
 
   //
@@ -57,6 +63,14 @@ public class INT extends HSerializer<Integer> {
 
   public static int toInt(final byte[] bytes, final int offset, Order order) {
     return fromRawInt(getRaw(bytes, offset), order);
+  }
+
+  public static int toInt(ByteBuffer buff) {
+    return toInt(buff, DEFAULT_ORDER);
+  }
+
+  public static int toInt(ByteBuffer buff, Order order) {
+    return fromRawInt(getRaw(buff), order);
   }
 
   public static byte[] toBytes(int val) {

@@ -34,13 +34,18 @@ public class FLOAT extends HSerializer<Float> {
   }
 
   @Override
-  public void putBytes(ByteBuffer buff, Float val) {
+  public void write(ByteBuffer buff, Float val) {
     putBytes(buff, val, order);
   }
 
   @Override
   public Float fromBytes(byte[] bytes) {
     return toFloat(bytes, 0, order);
+  }
+
+  @Override
+  public Float read(ByteBuffer buff) {
+    return toFloat(buff, order);
   }
 
   //
@@ -61,6 +66,14 @@ public class FLOAT extends HSerializer<Float> {
 
   public static float toFloat(final byte[] bytes, final int offset, Order order) {
     return fromRawInt(getRaw(bytes, offset), order);
+  }
+
+  public static float toFloat(ByteBuffer buff) {
+    return toFloat(buff, DEFAULT_ORDER);
+  }
+
+  public static float toFloat(ByteBuffer buff, Order order) {
+    return fromRawInt(getRaw(buff), order);
   }
 
   public static byte[] toBytes(float val) {
