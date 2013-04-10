@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -11,15 +12,16 @@ import org.junit.Test;
  */
 public abstract class RandomTestHSerializable<T extends Comparable<T>> extends TestHSerializable<T> {
 
-  protected static final Log LOG = LogFactory.getLog(TestBOOLEAN.class);
+  protected static final Log LOG = LogFactory.getLog(RandomTestHSerializable.class);
 
-  protected static final Random r;
-  protected static final int numTests;
+  protected Random r;
+  protected int numTests;
 
   /**
    * Initialize <code>Random</code> and <code>numTests</code>.
    */
-  static {
+  @Before
+  public void setUp() {
     String seed = System.getProperty("test.random.seed", "" + System.currentTimeMillis());
     LOG.info("Using test.random.seed value: " + seed);
     r = new Random(Long.valueOf(seed));
