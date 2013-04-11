@@ -8,11 +8,22 @@ import static util.HSerializer.compare;
 import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
+import java.util.Comparator;
+
 import org.junit.Test;
 
 import types.VARCHAR;
 
 public class TestVARCHAR extends RandomTestHSerializable<String> {
+
+  protected Comparator<String> getComparator() {
+    return new Comparator<String>() {
+      @Override
+      public int compare(String o1, String o2) {
+        return o1.compareTo(o2);
+      }
+    };
+  }
 
   protected String create() {
     int len = r.nextInt(1024);

@@ -10,7 +10,7 @@ import org.junit.Test;
 /**
  * Base-class providing repeatable random generation of test values.
  */
-public abstract class RandomTestHSerializable<T extends Comparable<T>> extends TestHSerializable<T> {
+public abstract class RandomTestHSerializable<T> extends TestHSerializable<T> {
 
   protected static final Log LOG = LogFactory.getLog(RandomTestHSerializable.class);
 

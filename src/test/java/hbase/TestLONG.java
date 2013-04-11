@@ -9,6 +9,8 @@ import static util.HSerializer.compare;
 import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
+import java.util.Comparator;
+
 import org.junit.Test;
 
 import types.LONG;
@@ -16,6 +18,15 @@ import types.LONG;
 public class TestLONG extends RandomTestHSerializable<Long> {
 
   private static final byte ONES = (byte) 0xFF;
+
+  protected Comparator<Long> getComparator() {
+    return new Comparator<Long>() {
+      @Override
+      public int compare(Long o1, Long o2) {
+        return o1.compareTo(o2);
+      }
+    };
+  }
 
   protected Long create() {
     return r.nextLong();

@@ -1,6 +1,7 @@
 package util;
 
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -58,6 +59,25 @@ public abstract class HSerializer<T> {
     }
     if (t2 == null) return o.cmp(1);
     return o.cmp(t1.compareTo(t2));
+  }
+
+  /**
+   * Extend a {@link Comparator} to support nulls on either side.
+   */
+  public static <T> int compare(Comparator<T> cmp, HSerializer<T> serde, T t1, T t2) {
+    return compare(cmp, serde.order, t1, t2);
+  }
+
+  /**
+   * Extend a {@link Comparator} to support nulls on either side.
+   */
+  public static <T> int compare(Comparator<T> cmp, Order o, T t1, T t2) {
+    if (t1 == null) {
+      if (t2 == null) return 0;
+      else return o.cmp(-1);
+    }
+    if (t2 == null) return o.cmp(1);
+    return o.cmp(cmp.compare(t1, t2));
   }
 
   /**

@@ -8,16 +8,18 @@ import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 
 import org.junit.Test;
 
 import util.HSerializer;
 
-public abstract class TestHSerializable<T extends Comparable<T>> {
+public abstract class TestHSerializable<T> {
 
   protected abstract T create();
   protected abstract HSerializer<T> ascendingSerializer();
   protected abstract HSerializer<T> descendingSerializer();
+  protected abstract Comparator<T> getComparator();
 
   protected void testSerialization(T val, HSerializer<T> serde) {
 
@@ -26,7 +28,7 @@ public abstract class TestHSerializable<T extends Comparable<T>> {
     T p = serde.fromBytes(bytes);
     assertEquals(
       "round-trip byte[] serialization should be equal.",
-      0, HSerializer.compare(serde, val, p));
+      0, compare(getComparator(), serde, val, p));
 
     // test ByteBuffer serialization
     ByteBuffer buf = ByteBuffer.allocate(bytes.length);
@@ -34,13 +36,13 @@ public abstract class TestHSerializable<T extends Comparable<T>> {
     buf.flip();
     p = serde.read(buf);
     assertEquals("round-trip ByteBuffer serialization should be equal",
-      0, HSerializer.compare(serde, val, p));
+      0, compare(getComparator(), serde, val, p));
   }
 
   protected void testSort(T val1, T val2, HSerializer<T> serde) {
     byte[] bytes1 = serde.toBytes(val1);
     byte[] bytes2 = serde.toBytes(val2);
-    int expectedOrder = signum(compare(serde, val1, val2));
+    int expectedOrder = signum(compare(getComparator(), serde, val1, val2));
     int byteOrder = signum(compare(bytes1, bytes2));
 
     assertEquals(

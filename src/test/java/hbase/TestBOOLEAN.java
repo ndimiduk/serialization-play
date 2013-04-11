@@ -9,11 +9,22 @@ import static util.HSerializer.compare;
 import static util.HSerializer.Order.ASCENDING;
 import static util.HSerializer.Order.DESCENDING;
 
+import java.util.Comparator;
+
 import org.junit.Test;
 
 import types.BOOLEAN;
 
 public class TestBOOLEAN extends RandomTestHSerializable<Boolean> {
+
+  protected Comparator<Boolean> getComparator() {
+    return new Comparator<Boolean>() {
+      @Override
+      public int compare(Boolean o1, Boolean o2) {
+        return o1.compareTo(o2);
+      }
+    };
+  }
 
   protected Boolean create() {
     return r.nextBoolean();
