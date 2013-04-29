@@ -144,7 +144,7 @@ public abstract class HSerializer<T> {
     return this.getClass().getSimpleName() + "(" + order + ")";
   }
 
-  public static int unsignedCmp(long x1, long x2) {
+  private static int unsignedCmp(long x1, long x2) {
     int cmp;
     if ((cmp = (x1 < x2 ? -1 : (x1 == x2 ? 0 : 1))) == 0) return 0;
     // invert the result when either value is negative
@@ -157,7 +157,7 @@ public abstract class HSerializer<T> {
    * <code>offset</code> as 4 big-endian bytes.
    * @return number of bytes written.
    */
-  public static int putUint32(byte[] dst, int offset, int val) {
+  private static int putUint32(byte[] dst, int offset, int val) {
     dst[offset] = (byte) ((val >>> 24) & 0xff);
     dst[offset + 1] = (byte) ((val >>> 16) & 0xff);
     dst[offset + 2] = (byte) ((val >>> 8) & 0xff);
@@ -385,7 +385,7 @@ public abstract class HSerializer<T> {
    * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
    *      static void encodeSmallFloatKey(double r, KeyEncoder *p)
    */
-  public static void encodeSmallFloatKey(ByteBuffer buff, double r) {
+  private static void encodeSmallFloatKey(ByteBuffer buff, double r) {
     assert r > 0.0 && r < 1.0;
     int e = 0, n, d;
     while (r < 1e-10) { r *= 1e8; e += 4; }
@@ -413,7 +413,7 @@ public abstract class HSerializer<T> {
    * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
    *      static int encodeLargeFloatKey(double r, KeyEncoder *p)
    */
-  public static int encodeLargeFloatKey(ByteBuffer buff, double r) {
+  private static int encodeLargeFloatKey(ByteBuffer buff, double r) {
     assert r >= 1.0;
     int e = 0, n, d;
     while (r >= 1e32 && e <= 350) { r *= 1e-32; e +=16; }
