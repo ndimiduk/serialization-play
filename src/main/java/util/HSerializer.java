@@ -232,6 +232,24 @@ public abstract class HSerializer<T> {
   }
 
   /**
+   * Return the number of bytes needed to represent a 64-bit signed integer.
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      static int significantBytes(sqlite4_int64 v)
+   */
+  private static int significantBytes(long v) {
+    long x;
+    int n = 1;
+    if (v > 0) {
+      x = -128;
+      while (v < x && n < 8) { n++; x *= 256; }
+    } else {
+      x = 127;
+      while (v > x && n < 8) { n++; x *= 256; }
+    }
+    return n;
+  }
+
+  /**
    * Inspect an encoded varu64 for it's encoded length.
    * @param src source buffer
    * @param offset offset into <code>src</code>
@@ -297,6 +315,122 @@ public abstract class HSerializer<T> {
     }
     a8 = src[offset + 8] & 0xff;
     return (ret << 32) | (0xffffffff & ((a5 << 24) | (a6 << 16) | (a7 << 8) | a8));
+  }
+
+  /**
+   * Encode the positive integer m using the key encoding.
+   * @return E(xponent)
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   *      static int encodeIntKey(sqlite4_uint64 m, KeyEncoder *p)
+   */
+  private static int encodePosIntKey(ByteBuffer buff, long m) {
+    assert m > 0;
+    int i = 0, e;
+    byte[] digits = new byte[20];
+    do {
+      digits[i++] = (byte) ((m % 100) & 0xff);
+      m /= 100;
+    } while (m > 0);
+    e = i;
+    assert e >= 1 && e <= 10;
+    while (i > 0)
+      buff.put((byte) ((digits[--i] * 2 + 1) & 0xff));
+    buff.array()[buff.position()] &= 0xfe;
+    return e;
+  }
+
+  /**
+   * Encode a single integer using the key encoding. The caller must ensure
+   * that sufficient space exits in a[] (at least 12 bytes). The return value
+   * is the number of bytes of a[] used.
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   *      int sqlite4VdbeEncodeIntKey(u8 *a, sqlite4_int64 v)
+   */
+  public static void encodeIntKey(ByteBuffer buff, long v) {
+    int e;
+    if (v < 0) {
+      // TODO: use mark() instead of startPos?
+      int startPos = buff.position();
+      buff.position(buff.position() + 1);
+      e = encodePosIntKey(buff, -v);
+      assert e <= 10;
+      // "finite negative values will have initial bytes of 0x08 through 0x14"
+      buff.put(startPos, (byte) ((0x13 - e) & 0xff));
+      for (int i = startPos + 1; i < buff.position() + 1; i++)
+        buff.put(i, (byte) ((buff.get(i) ^ 0xff) & 0xff));
+      return;
+    }
+    if (v > 0) {
+      // "Medium positive values are a single byte of 0x17+E followed by M"
+      int startPos = buff.position();
+      buff.position(buff.position() + 1);
+      e = encodePosIntKey(buff, v);
+      assert e <= 10;
+      // "finite positive values will have initial bytes of 0x16 through 0x22"
+      buff.put(startPos, (byte) ((0x17 + e) & 0xff));
+      return;
+    }
+    buff.put((byte) 0x15);
+  }
+
+  /**
+   * Encode the small positive floating point number r using the key encoding.
+   * The caller guarantees that r will be less than 1.0 and greater than 0.0.
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   *      static void encodeSmallFloatKey(double r, KeyEncoder *p)
+   */
+  public static void encodeSmallFloatKey(ByteBuffer buff, double r) {
+    assert r > 0.0 && r < 1.0;
+    int e = 0, n, d;
+    while (r < 1e-10) { r *= 1e8; e += 4; }
+    while (r < 0.01) { r *= 100.0; e++; }
+    n = putVaruint64(buff.array(), buff.position(), e);
+    for (int i = buff.position(); i < buff.position() + n; i++)
+      buff.put(i, (byte) ((buff.get(i) ^ 0xff) & 0xff));
+    buff.position(buff.position() + n);
+    for (int i = 0; i < 18 && r != 0.0; i++) {
+      r *= 100.0;
+      d = (int) r;
+      buff.put((byte) ((2 * d + 1) & 0xff));
+      r -= d;
+    }
+    buff.put(buff.position(), (byte) (buff.get(buff.position()) & 0xfe));
+  }
+
+  /**
+   * Encode the large positive floating point number r using the key encoding.
+   * The caller guarantees that r will be finite and greater than or equal to
+   * 1.0.
+   * @return E(xponent)
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   *      static int encodeLargeFloatKey(double r, KeyEncoder *p)
+   */
+  public static int encodeLargeFloatKey(ByteBuffer buff, double r) {
+    assert r >= 1.0;
+    int e = 0, n, d;
+    while (r >= 1e32 && e <= 350) { r *= 1e-32; e +=16; }
+    while (r >= 1e8 && e <= 350) { r *= 1e-8; e+= 4; }
+    while (r >= 1.0 && e <= 350) { r *= 0.01; e++; }
+    if (e > 10) {
+      n = putVaruint64(buff.array(), buff.position(), e);
+      buff.position(buff.position() + n);
+    }
+    for (int i = 0; i < 18 && r != 0.0; i++) {
+      r *= 100.0;
+      d = (int) r;
+      buff.put((byte) ((2 * d + 1) & 0xff));
+      r -= d;
+    }
+    buff.put(buff.position(), (byte) (buff.get(buff.position()) & 0xfe));
+    return e;
   }
 
   public abstract boolean supportsNull();
