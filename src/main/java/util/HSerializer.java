@@ -1,6 +1,7 @@
 package util;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Comparator;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -322,10 +323,10 @@ public abstract class HSerializer<T> {
    * @return E(xponent)
    *
    * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
-   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
    *      static int encodeIntKey(sqlite4_uint64 m, KeyEncoder *p)
    */
-  private static int encodePosIntKey(ByteBuffer buff, long m) {
+  private static int _encodeIntKey(ByteBuffer buff, long m) {
     assert m > 0;
     int i = 0, e;
     byte[] digits = new byte[20];
@@ -347,7 +348,7 @@ public abstract class HSerializer<T> {
    * is the number of bytes of a[] used.
    *
    * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
-   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
    *      int sqlite4VdbeEncodeIntKey(u8 *a, sqlite4_int64 v)
    */
   public static void encodeIntKey(ByteBuffer buff, long v) {
@@ -356,19 +357,19 @@ public abstract class HSerializer<T> {
       // TODO: use mark() instead of startPos?
       int startPos = buff.position();
       buff.position(buff.position() + 1);
-      e = encodePosIntKey(buff, -v);
+      e = _encodeIntKey(buff, -v);
       assert e <= 10;
       // "finite negative values will have initial bytes of 0x08 through 0x14"
       buff.put(startPos, (byte) ((0x13 - e) & 0xff));
       for (int i = startPos + 1; i < buff.position() + 1; i++)
-        buff.put(i, (byte) ((buff.get(i) ^ 0xff) & 0xff));
+        buff.array()[i] ^= 0xff;
       return;
     }
     if (v > 0) {
       // "Medium positive values are a single byte of 0x17+E followed by M"
       int startPos = buff.position();
       buff.position(buff.position() + 1);
-      e = encodePosIntKey(buff, v);
+      e = _encodeIntKey(buff, v);
       assert e <= 10;
       // "finite positive values will have initial bytes of 0x16 through 0x22"
       buff.put(startPos, (byte) ((0x17 + e) & 0xff));
@@ -382,7 +383,7 @@ public abstract class HSerializer<T> {
    * The caller guarantees that r will be less than 1.0 and greater than 0.0.
    *
    * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
-   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
    *      static void encodeSmallFloatKey(double r, KeyEncoder *p)
    */
   private static void encodeSmallFloatKey(ByteBuffer buff, double r) {
@@ -392,7 +393,7 @@ public abstract class HSerializer<T> {
     while (r < 0.01) { r *= 100.0; e++; }
     n = putVaruint64(buff.array(), buff.position(), e);
     for (int i = buff.position(); i < buff.position() + n; i++)
-      buff.put(i, (byte) ((buff.get(i) ^ 0xff) & 0xff));
+      buff.array()[i] ^= 0xff;
     buff.position(buff.position() + n);
     for (int i = 0; i < 18 && r != 0.0; i++) {
       r *= 100.0;
@@ -400,7 +401,7 @@ public abstract class HSerializer<T> {
       buff.put((byte) ((2 * d + 1) & 0xff));
       r -= d;
     }
-    buff.put(buff.position(), (byte) (buff.get(buff.position()) & 0xfe));
+    buff.array()[buff.position()] &= 0xfe;
   }
 
   /**
@@ -410,7 +411,7 @@ public abstract class HSerializer<T> {
    * @return E(xponent)
    *
    * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
-   * @see http://www.sqlite.org/src4/finfo?name=src/varint.c,
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
    *      static int encodeLargeFloatKey(double r, KeyEncoder *p)
    */
   private static int encodeLargeFloatKey(ByteBuffer buff, double r) {
@@ -429,8 +430,190 @@ public abstract class HSerializer<T> {
       buff.put((byte) ((2 * d + 1) & 0xff));
       r -= d;
     }
-    buff.put(buff.position(), (byte) (buff.get(buff.position()) & 0xfe));
+    buff.array()[buff.position()] &= 0xfe;
     return e;
+  }
+
+  /**
+   * Encode a null value
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      static int encodeOneKeyValue(...)
+   */
+  private static void encodeNull(ByteBuffer buff) {
+    buff.put((byte) 0x05);
+  }
+
+  /**
+   * Encode an integral value
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      static int encodeOneKeyValue(...)
+   */
+  private static void encodeInt(ByteBuffer buff, long v) {
+    int e, i;
+    if (v == 0) {
+      buff.put((byte) 0x15); /* Numeric zero */
+    } else if (v < 0) {
+      buff.put((byte) 0x08); /* Large negative number */
+      i = buff.position();
+      e = _encodeIntKey(buff, -v);
+      if (e <= 10) buff.put((byte) (0x13 - e)); /* Medium negative number */
+      while (i <= buff.position()) buff.array()[i++] ^= 0xff;
+    } else {
+      buff.put((byte) 0x22); /* Large positive number */
+      i = buff.position();
+      e = _encodeIntKey(buff, v);
+      if (e <= 10) buff.put(i, (byte) (0x17 + e)); /* Medium positive number */
+    }
+  }
+
+  /**
+   * Encode a Real value
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      static int encodeOneKeyValue(...)
+   */
+  private static void encodeReal(ByteBuffer buff, double r) {
+    int e, i;
+    byte[] a;
+    if (r == 0.0) {
+      buff.put((byte) 0x15); /* Numeric zero */
+    } else if (Double.isNaN(r)) {
+      buff.put((byte) 0x06); /* NaN */
+    } else if (Double.NEGATIVE_INFINITY == r) {
+      buff.put((byte) 0x07);
+    } else if (Double.POSITIVE_INFINITY == r) {
+      buff.put((byte) 0x23);
+    } else if (r <= -1.0) {
+      buff.put((byte) 0x08); /* Large negative values */
+      i = buff.position();
+      e = encodeLargeFloatKey(buff, -r);
+      if (e <= 10) buff.put(i, (byte) (0x13 - e)); /* Medium negative values */
+      a = buff.array();
+      while (i <= buff.position()) a[i++] ^= 0xff;
+    } else if (r < 0.0) {
+      buff.put((byte) 0x14); /* Small negative values */
+      i = buff.position();
+      encodeSmallFloatKey(buff, -r);
+      a = buff.array();
+      while (i <= buff.position()) a[i++] ^= 0xff;
+    } else if (r < 1.0) {
+      buff.put((byte) 0x16); /* Small positive values */
+      encodeSmallFloatKey(buff, r);
+    } else {
+      buff.put((byte) 0x22); /* Large positive values */
+      i = buff.position();
+      e = encodeLargeFloatKey(buff, r);
+      if (e <= 10) buff.put(i, (byte) (0x17 + e)); /* Medium positive values. */
+    }
+  }
+
+  /**
+   * Encode a Text value
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      static int encodeOneKeyValue(...)
+   */
+  private static void encodeString(ByteBuffer buff, String s) {
+    buff.put((byte) 0x24);
+    buff.put(s.getBytes(Charset.forName("UTF-8")));
+    buff.put((byte) 0x00);
+  }
+
+  /**
+   * Encode a Blob value, last element in Key
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      static int encodeOneKeyValue(...)
+   */
+  private static void encodeBlobLast(ByteBuffer buff, byte[] b) {
+    // Blobs as final entry in a compound key are written unencoded.
+    assert buff.remaining() >= b.length + 1;
+    buff.put((byte) 0x26);
+    buff.put(b);
+  }
+
+  /**
+   * Encode a Blob value, intermediate element in Key
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      static int encodeOneKeyValue(...)
+   */
+  private static void encodeBlobMid(ByteBuffer buff, byte[] b) {
+    // Blobs as intermediate entries are encoded as 7-bits per byte, null-terminated.
+    assert buff.remaining() >= (b.length * 8 + 6) / 7 + 2;
+    buff.put((byte) 0x26); /* Blob */
+    byte s = 1, t = 0;
+    for (int i = 0; i < b.length; i++) {
+      buff.put((byte) (0x80 | t | (b[i] >>> s)));
+      if (s < 7) {
+        t = (byte) (b[i] << (7 - s));
+        s++;
+      } else {
+        buff.put((byte) (0x80 | b[i]));
+        s = 1;
+        t = 0;
+      }
+    }
+    if (s > 1) buff.put((byte) (0x80 | t));
+    buff.put((byte) 0x00);
+  }
+
+  /**
+   * Skip <code>buff.position()</code> forward <code>n</code> entries. This is
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      int sqlite4VdbeShortKey(const u8 *aKey, int nKey, int nField)
+   */
+  public static void seekn(ByteBuffer buff, int n) {
+    // TODO
+  }
+
+  /**
+   * Encode a sequence of values into a compound key.
+   *
+   * @see http://sqlite.org/src4/doc/trunk/www/key_encoding.wiki
+   * @see http://www.sqlite.org/src4/finfo?name=src/vdbecodec.c,
+   *      int sqlite4VdbeEncodeKey(...)
+   */
+  public static void encode(ByteBuffer buff, Object[] vals) {
+    for (int i = 0; i < vals.length; i++) {
+      if (null == vals[i]) {
+        encodeNull(buff);
+        continue;
+      }
+      Class<?> c = vals[i].getClass();
+      if (Boolean.class.isAssignableFrom(c) || Character.class.isAssignableFrom(c)
+          || Byte.class.isAssignableFrom(c) || Short.class.isAssignableFrom(c)
+          || Integer.class.isAssignableFrom(c) || Long.class.isAssignableFrom(c)) {
+        encodeInt(buff, (Long) vals[i]);
+        continue;
+      }
+      if (Float.class.isAssignableFrom(c) || Double.class.isAssignableFrom(c)) {
+        encodeReal(buff, (Double) vals[i]);
+        continue;
+      }
+      if (String.class.isAssignableFrom(c)) {
+        encodeString(buff, (String) vals[i]);
+        continue;
+      }
+      if (byte[].class.isAssignableFrom(c)) {
+        if (i == vals.length - 1)
+          encodeBlobLast(buff, (byte[]) vals[i]);
+        else
+          encodeBlobMid(buff, (byte[]) vals[i]);
+        continue;
+      }
+      assert false : "No registered handler for Object of type " + vals[i].getClass().getSimpleName();
+    }
   }
 
   public abstract boolean supportsNull();
